@@ -17,7 +17,7 @@ MODEL_PATH = (
 
 
 st.set_page_config(
-    page_title="Industrial Visual Anomaly Inspection",
+    page_title="Bottle-Mouth Anomaly Inspection",
     page_icon="🔍",
     layout="wide",
 )
@@ -76,15 +76,16 @@ def predict(image, model_artifact):
     return anomaly_score, threshold, predicted_label
 
 
-st.title("Industrial Visual Anomaly Inspection")
-st.caption("工业视觉异常检测系统")
+st.title("Bottle-Mouth Visual Anomaly Inspection")
+st.caption("固定俯视视角瓶口区域异常检测原型")
 
 st.write(
-    "Upload a bottle image to classify it as "
+    "Upload a compatible top-view image of the bottle "
+    "opening to classify it as "
     "**Good** or **Anomaly**."
 )
 st.write(
-    "上传一张瓶子图片，系统将判断该图片是"
+    "上传一张与数据集视角相近的瓶口区域图片，系统将判断该图片是"
     "**正常**还是**异常**。"
 )
 
@@ -99,8 +100,12 @@ with st.sidebar:
     st.divider()
 
     st.info(
-        "This system performs image-level anomaly "
-        "detection. It does not locate defect pixels."
+        "Validated scope: image-level inspection of the "
+        "bottle opening and surrounding rim from a fixed "
+        "top view. This is not full-bottle inspection and "
+        "does not locate defect pixels.\n\n"
+        "适用范围：固定俯视视角下的瓶口及周围边缘图片级检测；"
+        "不代表整瓶质检能力，也不定位缺陷像素。"
     )
 
 try:
@@ -110,7 +115,7 @@ except Exception as error:
     st.stop()
 
 uploaded_file = st.file_uploader(
-    "Upload a bottle image / 上传瓶子图片",
+    "Upload a top-view bottle-opening image / 上传俯视瓶口图片",
     type=["png", "jpg", "jpeg"],
 )
 
@@ -146,7 +151,7 @@ with result_column:
     st.subheader("Inspection result / 检测结果")
 
     if predicted_label == "Good":
-        st.success("GOOD — Normal bottle / 正常瓶子")
+        st.success("GOOD — Normal view / 当前瓶口视图正常")
     else:
         st.error("ANOMALY — Possible defect / 可能存在缺陷")
 

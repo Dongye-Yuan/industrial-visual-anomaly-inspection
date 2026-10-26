@@ -11,7 +11,9 @@
 
 ## English
 
-An end-to-end, normal-only visual anomaly detection project for automated bottle inspection using the MVTec AD dataset. The repository covers dataset exploration, handcrafted feature extraction, one-class model training, threshold calibration, evaluation, model comparison, artifact persistence, and single-image inference.
+An end-to-end, normal-only, image-level anomaly detection prototype for fixed top-view inspection of the bottle-opening region in the MVTec AD bottle category. The repository covers dataset exploration, handcrafted feature extraction, one-class model training, threshold calibration, evaluation, model comparison, artifact persistence, and single-image inference.
+
+The deployed model classifies a compatible image as **Good** or **Anomaly**. Its validated scope is the bottle opening and surrounding rim under a camera view similar to the dataset; it is not a general full-bottle, bottle-side, or bottle-bottom inspection system, and it does not localise defect pixels.
 
 ### Engineering ownership
 
@@ -66,6 +68,8 @@ On the available test set, the selected model accepted all 20 good bottles and d
 ### Dataset
 
 The project uses the **MVTec AD bottle** category:
+
+In this dataset, the visible inspection region is the bottle opening and surrounding rim captured from a consistent top view. Results should therefore be interpreted within that imaging setup.
 
 | Split and category | Images |
 |---|---:|
@@ -151,7 +155,7 @@ Launch the bilingual Streamlit interface locally:
 streamlit run app/app.py
 ```
 
-Upload a PNG or JPEG bottle image to view the image-level decision, anomaly score, and calibrated threshold.
+Upload a compatible top-view PNG or JPEG image of the bottle-opening region to view the image-level decision, anomaly score, and calibrated threshold.
 
 ![Streamlit anomaly inspection demo](docs/images/streamlit_demo.png)
 
@@ -183,7 +187,9 @@ industrial-visual-anomaly-inspection/
 
 ## 中文
 
-这是一个面向工业瓶体质检的端到端异常检测项目，使用 MVTec AD 数据集完成数据探索、HOG 特征提取、单类模型训练、阈值校准、性能评估、模型对比、模型保存以及单张图片推理。
+这是一个面向固定俯视视角瓶口区域的端到端、仅正常样本训练、图片级异常检测原型。项目使用 MVTec AD bottle 类别完成数据探索、HOG 特征提取、单类模型训练、阈值校准、性能评估、模型对比、模型保存以及单张图片推理。
+
+部署模型会把符合输入条件的图片判断为 **Good** 或 **Anomaly**。目前验证范围是与数据集拍摄条件相近的瓶口及周围边缘区域，不代表整瓶、瓶身侧面或瓶底质检能力，也不能定位缺陷的具体像素位置。
 
 ### 个人实现
 
@@ -275,7 +281,7 @@ GitHub Actions 会在每次向 `main` 推送代码以及创建 Pull Request 时�
 streamlit run app/app.py
 ```
 
-上传 PNG 或 JPEG 瓶子图片后，页面会显示图片级判断、异常分数和校准阈值。按 `Control + C` 可以停止本地服务。
+上传与数据集视角相近的瓶口区域 PNG 或 JPEG 图片后，页面会显示图片级判断、异常分数和校准阈值。按 `Control + C` 可以停止本地服务。
 
 ### 设计亮点
 
@@ -289,7 +295,7 @@ streamlit run app/app.py
 
 - 当前只进行图片级异常检测，尚未定位缺陷像素区域。
 - 灰度 HOG 对颜色变化和低对比度污染不够敏感。
-- 当前实验只覆盖 bottle 类别。
+- 当前实验只覆盖固定俯视视角下的 MVTec AD bottle 瓶口区域，不能直接代表整瓶、瓶身侧面或瓶底检测能力。
 - 后续可增加颜色直方图、LBP、预训练深度特征和像素级定位方法。
 
 详细的复现、维护和扩展说明请阅读：[开发者文档](docs/DEVELOPER_GUIDE.md)。

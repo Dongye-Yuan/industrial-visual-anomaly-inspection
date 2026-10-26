@@ -6,9 +6,9 @@ This document explains how to reproduce, maintain, debug, and extend the industr
 
 ## 1. System scope｜系统范围
 
-The current system performs **image-level, normal-only anomaly detection** for the MVTec AD bottle category. Training uses normal images only. Evaluation uses good and labelled anomalous images. Ground-truth masks are used for analysis and visualisation, not as model inputs.
+The current system performs **image-level, normal-only anomaly detection** for the fixed top-view bottle-opening region in the MVTec AD bottle category. Training uses normal images only. Evaluation uses good and labelled anomalous images. Ground-truth masks are used for analysis and visualisation, not as model inputs. The validated scope does not include full-bottle, bottle-side, or bottle-bottom inspection, and the model does not localise defect pixels.
 
-当前系统针对 MVTec AD bottle 类别进行**图片级、仅正常样本训练的异常检测**。训练阶段只使用正常图片；评估阶段使用正常和带类别标签的异常图片。像素级掩膜仅用于分析与可视化，不作为模型输入。
+当前系统针对 MVTec AD bottle 类别中固定俯视视角的瓶口区域进行**图片级、仅正常样本训练的异常检测**。训练阶段只使用正常图片；评估阶段使用正常和带类别标签的异常图片。像素级掩膜仅用于分析与可视化，不作为模型输入。目前验证范围不包括整瓶、瓶身侧面或瓶底质检，模型也不会定位缺陷像素。
 
 ### Supported workflow｜已支持流程
 
@@ -288,9 +288,9 @@ Start the local bilingual interface from the repository root:
 streamlit run app/app.py
 ```
 
-The app loads the same `model.joblib` artifact used by the command-line predictor. Uploaded files are processed in memory and are not added to the dataset or repository. The interface displays the uploaded image, anomaly score, calibrated threshold, and final Good/Anomaly decision.
+The app loads the same `model.joblib` artifact used by the command-line predictor. Uploaded files are processed in memory and are not added to the dataset or repository. The interface displays the uploaded image, anomaly score, calibrated threshold, and final Good/Anomaly decision. Reliable use requires a bottle-opening image with framing and acquisition conditions similar to the training data.
 
-网页界面与命令行预测工具加载同一个 `model.joblib`。上传图片在内存中处理，不会自动加入数据集或仓库。页面显示原图、异常分数、校准阈值和最终判断。
+网页界面与命令行预测工具加载同一个 `model.joblib`。上传图片在内存中处理，不会自动加入数据集或仓库。页面显示原图、异常分数、校准阈值和最终判断。可靠使用需要上传构图与采集条件接近训练数据的俯视瓶口图片。
 
 Use `Control + C` in the terminal running Streamlit to stop the local server.
 
