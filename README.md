@@ -11,9 +11,9 @@
 
 ## English
 
-An end-to-end, normal-only, image-level anomaly detection prototype for fixed top-view inspection of the bottle-opening region in the MVTec AD bottle category. The repository covers dataset exploration, handcrafted feature extraction, one-class model training, threshold calibration, evaluation, model comparison, artifact persistence, and single-image inference.
+An end-to-end, normal-only anomaly detection and localisation prototype for fixed top-view inspection of the bottle-opening region in the MVTec AD bottle category. The repository covers dataset exploration, handcrafted and pretrained deep features, one-class model training, threshold calibration, image- and pixel-level evaluation, model comparison, artifact persistence, and single-image inference.
 
-The deployed model classifies a compatible image as **Good** or **Anomaly**. Its validated scope is the bottle opening and surrounding rim under a camera view similar to the dataset; it is not a general full-bottle, bottle-side, or bottle-bottom inspection system, and it does not localise defect pixels.
+The deployed app classifies a compatible image as **Good** or **Anomaly** and can highlight suspicious pixels with a deep-feature heatmap. Its validated scope is the bottle opening and surrounding rim under a camera view similar to the dataset; it is not a general full-bottle, bottle-side, or bottle-bottom inspection system. Heatmaps are model evidence rather than guaranteed defect boundaries.
 
 ### Engineering ownership
 
@@ -22,8 +22,9 @@ This repository presents my independent end-to-end implementation. I designed an
 - dataset validation and exploratory analysis;
 - the HOG feature extraction pipeline;
 - One-Class SVM and Isolation Forest training workflows;
+- a compact PatchCore-style ResNet-18 patch-memory workflow;
 - normal-only threshold calibration and model evaluation;
-- model persistence and single-image inference;
+- model persistence, single-image inference, and heatmap localisation;
 - the bilingual Streamlit interface; and
 - reproducibility documentation and presentation-ready visualisations.
 
@@ -37,33 +38,37 @@ Industrial defects are rare and evolve over time, while normal products are comp
 
 ```text
 Bottle image
-    → grayscale and resize to 128 × 128
-    → 1,764-dimensional HOG feature vector
-    → StandardScaler + one-class detector
-    → anomaly score
-    → calibrated threshold
-    → Good or Anomaly
+    ├─ HOG branch → grayscale 128 × 128 → HOG → one-class detector
+    └─ Deep branch → RGB 224 × 224 → frozen ResNet-18 patches → normal memory bank
+                         ↓
+               anomaly score + calibrated threshold
+                         ↓
+             Good / Anomaly + localisation heatmap
 ```
 
-Three configurations were evaluated:
+Four configurations were evaluated:
 
 - HOG + One-Class SVM baseline
 - HOG + calibrated One-Class SVM
 - HOG + calibrated Isolation Forest
+- compact PatchCore-style deep patch memory
 
-The calibrated One-Class SVM was selected as the final model.
+The deep patch-memory model is the strongest evaluated model. It is a compact educational implementation inspired by PatchCore, not an exact reproduction of the paper.
 
 ### Key results
 
 | Model | Accuracy | Recall | Specificity | F1 score | Latency |
 |---|---:|---:|---:|---:|---:|
 | OCSVM baseline | 0.8434 | 0.9841 | 0.4000 | 0.9051 | 12.11 ms/image |
-| **OCSVM calibrated** | **0.9639** | **0.9524** | **1.0000** | **0.9756** | **11.94 ms/image** |
+| OCSVM calibrated | 0.9639 | 0.9524 | **1.0000** | 0.9756 | **11.94 ms/image** |
 | Isolation Forest | 0.8795 | 0.8730 | 0.9000 | 0.9167 | 11.99 ms/image |
+| **Deep patch memory** | **0.9880** | **1.0000** | 0.9500 | **0.9921** | 23.47 ms/image |
 
 ![Model comparison](outputs/model_comparison/model_comparison_bar_chart_ppt.png)
 
-On the available test set, the selected model accepted all 20 good bottles and detected 60 of 63 anomalous bottles. Its three false negatives were low-contrast contamination samples, which reveals the main limitation of grayscale HOG features.
+On the available test set, deep patch memory detected all 63 anomalous images and accepted 19 of 20 good images. It achieved image AUROC 1.0000, pixel AUROC 0.9861, pixel average precision 0.7747, and AU-PRO@0.30 0.9516. The stronger localisation comes with roughly twice the CPU inference latency of the HOG models.
+
+![Deep patch localisation examples](outputs/patchcore/heatmap_examples.png)
 
 ### Dataset
 
@@ -116,6 +121,7 @@ python src/explore_dataset.py
 python src/train_hog_ocsvm.py
 python src/train_hog_ocsvm_calibrated.py
 python src/train_hog_isolation_forest.py
+python src/train_patchcore.py
 python src/compare_models.py
 ```
 
@@ -124,6 +130,7 @@ Inspect one image with the saved final model:
 ```bash
 python src/predict_image.py data/mvtec_ad/bottle/test/good/000.png
 python src/predict_image.py data/mvtec_ad/bottle/test/broken_large/000.png
+python src/predict_patchcore.py data/mvtec_ad/bottle/test/broken_large/000.png
 ```
 
 Example output:
@@ -137,7 +144,7 @@ Prediction result
 
 ### Automated tests
 
-The repository includes data-independent unit tests for the HOG feature contract, calibrated-threshold decisions, missing-input validation, and the versioned model-artifact schema:
+The repository includes data-independent unit tests for the HOG feature contract, calibrated-threshold decisions, deep patch scoring and coreset selection, missing-input validation, and the versioned model-artifact schema:
 
 ```bash
 python -m unittest discover -s tests -v
@@ -155,7 +162,7 @@ Launch the bilingual Streamlit interface locally:
 streamlit run app/app.py
 ```
 
-Upload a compatible top-view PNG or JPEG image of the bottle-opening region to view the image-level decision, anomaly score, and calibrated threshold.
+Upload a compatible top-view PNG or JPEG image of the bottle-opening region. The model selector provides both the lightweight HOG baseline and the deep patch-memory model; the latter also displays a localisation heatmap and overlay.
 
 ![Streamlit anomaly inspection demo](docs/images/streamlit_demo.png)
 
@@ -173,6 +180,9 @@ industrial-visual-anomaly-inspection/
 │   ├── train_hog_ocsvm.py
 │   ├── train_hog_ocsvm_calibrated.py
 │   ├── train_hog_isolation_forest.py
+│   ├── patchcore.py
+│   ├── train_patchcore.py
+│   ├── predict_patchcore.py
 │   ├── compare_models.py
 │   └── predict_image.py
 ├── requirements.txt
@@ -187,9 +197,9 @@ industrial-visual-anomaly-inspection/
 
 ## 中文
 
-这是一个面向固定俯视视角瓶口区域的端到端、仅正常样本训练、图片级异常检测原型。项目使用 MVTec AD bottle 类别完成数据探索、HOG 特征提取、单类模型训练、阈值校准、性能评估、模型对比、模型保存以及单张图片推理。
+这是一个面向固定俯视视角瓶口区域的端到端、仅正常样本训练、异常检测与定位原型。项目使用 MVTec AD bottle 类别完成数据探索、HOG 与预训练深度特征提取、单类模型训练、阈值校准、图片级与像素级评估、模型对比、模型保存以及单张图片推理。
 
-部署模型会把符合输入条件的图片判断为 **Good** 或 **Anomaly**。目前验证范围是与数据集拍摄条件相近的瓶口及周围边缘区域，不代表整瓶、瓶身侧面或瓶底质检能力，也不能定位缺陷的具体像素位置。
+部署应用会把符合输入条件的图片判断为 **Good** 或 **Anomaly**，深度模型还能用热力图标出可疑区域。目前验证范围是与数据集拍摄条件相近的瓶口及周围边缘区域，不代表整瓶、瓶身侧面或瓶底质检能力。热力图是模型判断依据，并不等同于保证准确的缺陷边界。
 
 ### 个人实现
 
@@ -198,8 +208,9 @@ industrial-visual-anomaly-inspection/
 - 数据集验证与探索性分析；
 - HOG 特征提取流水线；
 - One-Class SVM 与 Isolation Forest 训练流程；
+- 基于 ResNet-18 的紧凑型 PatchCore 风格补丁记忆流程；
 - 仅使用正常样本的阈值校准与模型评估；
-- 模型保存与单图推理；
+- 模型保存、单图推理与热力图定位；
 - 中英双语 Streamlit 界面；
 - 可复现技术文档与演示级可视化。
 
@@ -210,32 +221,34 @@ industrial-visual-anomaly-inspection/
 ### 技术流程
 
 ```text
-瓶子图片
-    → 灰度化并缩放至 128 × 128
-    → 提取 1,764 维 HOG 特征
-    → StandardScaler + 单类异常检测模型
-    → 计算异常分数
-    → 与校准阈值比较
-    → 输出 Good 或 Anomaly
+瓶口图片
+    ├─ HOG 分支 → 灰度 128 × 128 → HOG → 单类检测器
+    └─ 深度分支 → RGB 224 × 224 → 冻结的 ResNet-18 补丁 → 正常记忆库
+                         ↓
+                   异常分数与校准阈值
+                         ↓
+              Good / Anomaly + 定位热力图
 ```
 
-项目比较了三种配置：
+项目比较了四种配置：
 
 - HOG + One-Class SVM 基线模型
 - HOG + 校准阈值的 One-Class SVM
 - HOG + 校准阈值的 Isolation Forest
+- 紧凑型 PatchCore 风格深度补丁记忆模型
 
-最终选择校准后的 One-Class SVM 作为部署模型。
+深度补丁记忆模型是当前表现最强的模型。它是受 PatchCore 启发的教学型紧凑实现，并非论文的完全复现。
 
 ### 核心结果
 
 | 模型 | 准确率 | 召回率 | 特异度 | F1 分数 | 推理延迟 |
 |---|---:|---:|---:|---:|---:|
 | OCSVM 基线 | 0.8434 | 0.9841 | 0.4000 | 0.9051 | 12.11 ms/张 |
-| **校准 OCSVM** | **0.9639** | **0.9524** | **1.0000** | **0.9756** | **11.94 ms/张** |
+| 校准 OCSVM | 0.9639 | 0.9524 | **1.0000** | 0.9756 | **11.94 ms/张** |
 | Isolation Forest | 0.8795 | 0.8730 | 0.9000 | 0.9167 | 11.99 ms/张 |
+| **深度补丁记忆** | **0.9880** | **1.0000** | 0.9500 | **0.9921** | 23.47 ms/张 |
 
-在当前测试集上，最终模型正确接受了全部 20 张正常图片，并检出了 63 张异常图片中的 60 张。3 个漏检样本均为低对比度污染，这也说明仅使用灰度 HOG 特征对细微颜色和纹理异常的表达能力有限。
+在当前测试集上，深度补丁记忆模型检出了全部 63 张异常图片，并正确接受了 20 张正常图片中的 19 张。其图片 AUROC 为 1.0000、像素 AUROC 为 0.9861、像素平均精确率为 0.7747、AU-PRO@0.30 为 0.9516；代价是 CPU 推理延迟约为 HOG 模型的两倍。
 
 ### 快速运行
 
@@ -250,6 +263,7 @@ python src/explore_dataset.py
 python src/train_hog_ocsvm.py
 python src/train_hog_ocsvm_calibrated.py
 python src/train_hog_isolation_forest.py
+python src/train_patchcore.py
 python src/compare_models.py
 ```
 
@@ -257,6 +271,7 @@ python src/compare_models.py
 
 ```bash
 python src/predict_image.py path/to/image.png
+python src/predict_patchcore.py path/to/image.png
 ```
 
 程序会输出异常分数、校准阈值以及最终判断结果。分数高于阈值时输出 `Anomaly`，否则输出 `Good`。

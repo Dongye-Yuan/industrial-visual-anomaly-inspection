@@ -23,12 +23,14 @@ MODEL_FILES = {
     "Isolation Forest": OUTPUTS_DIR
     / "hog_isolation_forest"
     / "metrics.json",
+    "Deep Patch Memory": OUTPUTS_DIR / "patchcore" / "metrics.json",
 }
 
 # Colours sampled from the supplied blue-grey Canva PowerPoint template.
 NAVY = "#1F3A5F"
 STRONG_BLUE = "#2E5BBA"
 LIGHT_BLUE = "#6EA8FE"
+TEAL = "#22A6A8"
 GREY_BLUE = "#8293A6"
 SLIDE_GREY = "#E2E2E2"
 PALE_BLUE = "#D7E4F7"
@@ -36,7 +38,7 @@ GRID_GREY = "#C4CAD1"
 TEXT_GREY = "#4B5563"
 WHITE = "#FFFFFF"
 
-MODEL_COLOURS = [GREY_BLUE, STRONG_BLUE, LIGHT_BLUE]
+MODEL_COLOURS = [GREY_BLUE, STRONG_BLUE, LIGHT_BLUE, TEAL]
 
 
 def configure_plot_style() -> None:
@@ -60,7 +62,7 @@ def configure_plot_style() -> None:
 
 
 def load_metrics(outputs_dir: Path) -> pd.DataFrame:
-    """Read the evaluation results produced by the three training scripts."""
+    """Read the evaluation results produced by the training scripts."""
     model_files = {
         name: outputs_dir / path.relative_to(OUTPUTS_DIR)
         for name, path in MODEL_FILES.items()
@@ -254,8 +256,9 @@ def draw_grouped_bars(
     metrics = ["Accuracy", "Recall", "Specificity", "F1 Score"]
     labels = ["Accuracy", "Recall", "Specificity", "F1 score"]
     x = np.arange(len(metrics))
-    width = 0.23
+    width = min(0.23, 0.82 / len(results))
     offsets = (np.arange(len(results)) - (len(results) - 1) / 2) * width
+    selected_index = int(results["F1 Score"].idxmax())
 
     size = (13.33, 6.25) if presentation else (12.2, 6.7)
     fig, ax = plt.subplots(figsize=size, facecolor=background)
@@ -279,7 +282,7 @@ def draw_grouped_bars(
             padding=4,
             fontsize=11.5 if presentation else 9.5,
             color="#111827",
-            fontweight="bold" if model_index == 1 else "normal",
+            fontweight="bold" if model_index == selected_index else "normal",
         )
 
     if include_title:
@@ -308,7 +311,7 @@ def draw_grouped_bars(
     legend = ax.legend(
         loc="upper center",
         bbox_to_anchor=(0.5, 1.01 if presentation else 1.0),
-        ncol=3,
+        ncol=len(results),
         frameon=False,
         columnspacing=2.1,
         handlelength=1.8,

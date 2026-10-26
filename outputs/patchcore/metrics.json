@@ -1,0 +1,48 @@
+{
+  "model": "PatchCore-style ResNet-18 patch memory",
+  "implementation_note": "Compact educational implementation using a frozen ResNet-18 layer2 encoder and deterministic k-centre coreset.",
+  "model_training_images": 167,
+  "calibration_images": 42,
+  "test_images": 83,
+  "image_size": [
+    224,
+    224
+  ],
+  "patch_grid": [
+    14,
+    14
+  ],
+  "embedding_dimension": 128,
+  "memory_bank_size": 1024,
+  "threshold": 0.5534189343452454,
+  "pixel_threshold": 0.4566490352153778,
+  "threshold_strategy": "95th percentile of held-out normal image scores",
+  "image_auroc": 1.0,
+  "average_precision": 0.9999999999999998,
+  "accuracy": 0.9879518072289156,
+  "precision": 0.984375,
+  "recall": 1.0,
+  "specificity": 0.95,
+  "f1_score": 0.9921259842519685,
+  "pixel_auroc": 0.9861456907417963,
+  "pixel_average_precision": 0.7746828442786072,
+  "aupro_0_30": 0.9516324084575286,
+  "training_seconds": 4.379696082993178,
+  "inference_ms_per_image": 23.465836855284138,
+  "confusion_matrix": [
+    [
+      19,
+      1
+    ],
+    [
+      0,
+      63
+    ]
+  ],
+  "per_category_accuracy": {
+    "good": 0.95,
+    "broken_large": 1.0,
+    "broken_small": 1.0,
+    "contamination": 1.0
+  }
+}

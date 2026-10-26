@@ -6,18 +6,18 @@ This document explains how to reproduce, maintain, debug, and extend the industr
 
 ## 1. System scope｜系统范围
 
-The current system performs **image-level, normal-only anomaly detection** for the fixed top-view bottle-opening region in the MVTec AD bottle category. Training uses normal images only. Evaluation uses good and labelled anomalous images. Ground-truth masks are used for analysis and visualisation, not as model inputs. The validated scope does not include full-bottle, bottle-side, or bottle-bottom inspection, and the model does not localise defect pixels.
+The system performs **normal-only anomaly detection and localisation** for the fixed top-view bottle-opening region in the MVTec AD bottle category. Training uses normal images only. Evaluation uses good and labelled anomalous images. Ground-truth masks are used only for pixel-level evaluation and never as model inputs. The validated scope does not include full-bottle, bottle-side, or bottle-bottom inspection.
 
-当前系统针对 MVTec AD bottle 类别中固定俯视视角的瓶口区域进行**图片级、仅正常样本训练的异常检测**。训练阶段只使用正常图片；评估阶段使用正常和带类别标签的异常图片。像素级掩膜仅用于分析与可视化，不作为模型输入。目前验证范围不包括整瓶、瓶身侧面或瓶底质检，模型也不会定位缺陷像素。
+当前系统针对 MVTec AD bottle 类别中固定俯视视角的瓶口区域进行**仅正常样本训练的异常检测与定位**。训练阶段只使用正常图片；评估阶段使用正常和带标签的异常图片。像素级掩膜只用于像素级评估，不作为模型输入。目前验证范围不包括整瓶、瓶身侧面或瓶底质检。
 
 ### Supported workflow｜已支持流程
 
 ```text
 Dataset validation and EDA
-    → HOG extraction
-    → one-class model training
+    → HOG or pretrained deep-patch extraction
+    → one-class detector or normal patch memory
     → normal-only threshold calibration
-    → test evaluation
+    → image- and pixel-level evaluation
     → result visualisation and comparison
     → model serialization
     → single-image inference
@@ -84,13 +84,16 @@ The scripts currently discover PNG files with `Path.glob("*.png")`. Supporting a
 | `src/train_hog_ocsvm.py` | Train and evaluate the uncalibrated OCSVM baseline / 训练和评估未校准的 OCSVM 基线 |
 | `src/train_hog_ocsvm_calibrated.py` | Train, calibrate, evaluate, and save the selected OCSVM / 训练、校准、评估并保存最终 OCSVM |
 | `src/train_hog_isolation_forest.py` | Train and evaluate the calibrated Isolation Forest / 训练并评估校准后的 Isolation Forest |
+| `src/patchcore.py` | Shared ResNet-18 patch extraction, coreset, scoring, and map utilities / 深度补丁特征、核心集、评分与热力图工具 |
+| `src/train_patchcore.py` | Train and evaluate compact PatchCore-style deep patch memory / 训练并评估紧凑型 PatchCore 风格补丁记忆模型 |
+| `src/predict_patchcore.py` | Inspect one image and save its localisation heatmap / 检测单图并保存定位热力图 |
 | `src/compare_models.py` | Read metrics and generate comparison assets / 读取指标并生成模型对比材料 |
 | `src/predict_image.py` | Load the saved artifact and inspect one image / 加载已保存模型并检测单张图片 |
 | `app/app.py` | Provide a bilingual Streamlit upload and prediction interface / 提供中英双语图片上传与预测界面 |
 | `outputs/` | Versioned experiment results and model artifacts / 实验结果与模型文件 |
 | `docs/` | Developer documentation and demo assets / 开发者文档与演示素材 |
 
-The training scripts are intentionally independent so that each experiment can be executed and reviewed separately. Shared feature extraction could be refactored into a common module if the project grows.
+The HOG experiments remain independent for easy review. Deep-patch training, command-line inference, and the web app share `src/patchcore.py` so preprocessing and scoring stay consistent.
 
 目前各训练脚本相互独立，便于单独执行与审查。如果后续模型增多，可将特征提取和评估逻辑重构为共享模块。
 
@@ -125,6 +128,16 @@ The selected pipeline uses the following deterministic preprocessing:
 Any change to image size or HOG parameters changes the feature dimension. A model trained with one feature definition must not be used with another.
 
 修改图片尺寸或 HOG 参数会改变特征维度。训练和推理必须使用完全相同的特征定义。
+
+### Deep patch-memory configuration｜深度补丁记忆配置
+
+The deep branch resizes RGB images to `224 × 224`, applies ImageNet normalisation, and extracts a `14 × 14` grid of 128-dimensional features from a frozen pretrained ResNet-18 through `layer2`. A deterministic k-centre coreset keeps 1,024 representative normal patches. Each test-patch score is its nearest-memory Euclidean distance; the image score is the maximum patch score. Bilinear upsampling converts the patch grid into a localisation heatmap.
+
+深度分支将 RGB 图片缩放至 `224 × 224`，使用 ImageNet 归一化，并从冻结的预训练 ResNet-18 `layer2` 提取 `14 × 14` 个 128 维补丁特征。确定性的 k-centre 核心集保留 1,024 个代表性正常补丁。每个测试补丁的异常分数是其到正常记忆库的最近欧氏距离；图片分数取所有补丁的最大值，再通过双线性上采样生成定位热力图。
+
+The implementation is intentionally compact and educational. It is inspired by PatchCore but does not claim exact architectural or benchmark equivalence with the paper.
+
+该实现以教学和可维护性为目标，受 PatchCore 启发，但不声称与论文架构或基准结果完全等价。
 
 ## 6. Training and calibration｜训练与阈值校准
 
@@ -174,6 +187,7 @@ python src/explore_dataset.py
 python src/train_hog_ocsvm.py
 python src/train_hog_ocsvm_calibrated.py
 python src/train_hog_isolation_forest.py
+python src/train_patchcore.py
 python src/compare_models.py
 ```
 
@@ -187,6 +201,9 @@ Expected high-level checks:
 | Test images | 83 |
 | Selected threshold | approximately 0.5604 |
 | Selected model F1 | approximately 0.9756 |
+| Deep patch-memory image F1 | approximately 0.9921 |
+| Deep patch-memory pixel AUROC | approximately 0.9861 |
+| Deep patch-memory AU-PRO@0.30 | approximately 0.9516 |
 
 Small latency differences are expected across machines. Classification metrics should remain stable when the dataset and dependency versions are unchanged.
 
@@ -207,6 +224,8 @@ Each evaluated model writes its results to a dedicated directory under `outputs/
 | `precision_recall_curve.png` | Precision-recall trade-off / 精确率与召回率关系 |
 | `score_distribution.png` | Score distribution by defect category / 各缺陷类别的分数分布 |
 | `model.joblib` | Serialized inference artifact / 序列化推理模型 |
+| `model.pt` | Tensor-only deep patch-memory artifact / 仅张量的深度补丁记忆模型 |
+| `heatmap_examples.png` | Ground truth, anomaly maps, and overlays / 标注、异常图与叠加效果 |
 
 ## 9. Saved model contract｜模型文件约定
 
@@ -234,6 +253,10 @@ Only load `joblib` files from trusted sources. Python pickle-based formats can e
 
 只应加载可信来源的 `joblib` 文件，因为基于 pickle 的格式在反序列化时可能执行代码。
 
+`outputs/patchcore/model.pt` stores the frozen encoder weights, 1,024 × 128 memory bank, image and pixel thresholds, input size, patch grid, and normalisation metadata. Loading uses `torch.load(..., weights_only=True)` and reconstructs the encoder locally; no network download is needed for inference.
+
+`outputs/patchcore/model.pt` 保存冻结编码器权重、1,024 × 128 记忆库、图片与像素阈值、输入尺寸、补丁网格和归一化参数。推理时使用 `torch.load(..., weights_only=True)` 并在本地重建编码器，不需要联网下载权重。
+
 ## 10. Single-image inference｜单图推理
 
 Default usage:
@@ -246,6 +269,12 @@ Use another compatible model artifact:
 
 ```bash
 python src/predict_image.py path/to/image.png --model path/to/model.joblib
+```
+
+Deep patch-memory inference with a saved heatmap:
+
+```bash
+python src/predict_patchcore.py path/to/image.png
 ```
 
 Known validation examples:
@@ -288,9 +317,9 @@ Start the local bilingual interface from the repository root:
 streamlit run app/app.py
 ```
 
-The app loads the same `model.joblib` artifact used by the command-line predictor. Uploaded files are processed in memory and are not added to the dataset or repository. The interface displays the uploaded image, anomaly score, calibrated threshold, and final Good/Anomaly decision. Reliable use requires a bottle-opening image with framing and acquisition conditions similar to the training data.
+The app offers a model selector. The HOG option loads `model.joblib`; the deep option loads `model.pt` and displays a heatmap and overlay. Uploaded files are processed in memory and are not added to the dataset or repository. Reliable use requires a bottle-opening image with framing and acquisition conditions similar to the training data.
 
-网页界面与命令行预测工具加载同一个 `model.joblib`。上传图片在内存中处理，不会自动加入数据集或仓库。页面显示原图、异常分数、校准阈值和最终判断。可靠使用需要上传构图与采集条件接近训练数据的俯视瓶口图片。
+网页提供模型选择器：HOG 选项加载 `model.joblib`，深度选项加载 `model.pt` 并显示热力图和叠加图。上传图片仅在内存中处理，不会自动加入数据集或仓库。可靠使用需要上传构图与采集条件接近训练数据的俯视瓶口图片。
 
 Use `Control + C` in the terminal running Streamlit to stop the local server.
 
@@ -308,6 +337,7 @@ The tests validate:
 
 - the 1,764-dimensional HOG feature contract;
 - Good and Anomaly decisions on opposite sides of the calibrated threshold;
+- deterministic coreset selection, patch-distance scoring, and heatmap dimensions;
 - clear errors for missing image and model paths; and
 - the required metadata stored in the versioned `model.joblib` artifact.
 
