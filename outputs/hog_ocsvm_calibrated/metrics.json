@@ -1,0 +1,39 @@
+{
+  "model": "HOG + One-Class SVM with calibrated threshold",
+  "model_training_images": 167,
+  "calibration_images": 42,
+  "test_images": 83,
+  "image_size": [
+    128,
+    128
+  ],
+  "hog_feature_dimension": 1764,
+  "nu": 0.05,
+  "threshold": 0.5603564758744974,
+  "threshold_strategy": "95th percentile of held-out normal calibration scores",
+  "image_auroc": 0.9817460317460317,
+  "average_precision": 0.9950167900441699,
+  "accuracy": 0.963855421686747,
+  "precision": 1.0,
+  "recall": 0.9523809523809523,
+  "specificity": 1.0,
+  "f1_score": 0.975609756097561,
+  "training_seconds": 2.0285954999999376,
+  "inference_ms_per_image": 11.938573795206652,
+  "confusion_matrix": [
+    [
+      20,
+      0
+    ],
+    [
+      3,
+      60
+    ]
+  ],
+  "per_category_accuracy": {
+    "good": 1.0,
+    "broken_large": 1.0,
+    "broken_small": 1.0,
+    "contamination": 0.8571428571428571
+  }
+}

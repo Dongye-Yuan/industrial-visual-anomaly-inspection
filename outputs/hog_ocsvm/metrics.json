@@ -1,0 +1,37 @@
+{
+  "model": "HOG + One-Class SVM",
+  "training_images": 209,
+  "test_images": 83,
+  "image_size": [
+    128,
+    128
+  ],
+  "hog_feature_dimension": 1764,
+  "nu": 0.05,
+  "threshold": 0.0,
+  "image_auroc": 0.9833333333333333,
+  "average_precision": 0.9954482450257096,
+  "accuracy": 0.8433734939759037,
+  "precision": 0.8378378378378378,
+  "recall": 0.9841269841269841,
+  "specificity": 0.4,
+  "f1_score": 0.9051094890510949,
+  "training_seconds": 2.5079748339994694,
+  "inference_ms_per_image": 12.106472397617946,
+  "confusion_matrix": [
+    [
+      8,
+      12
+    ],
+    [
+      1,
+      62
+    ]
+  ],
+  "per_category_accuracy": {
+    "good": 0.4,
+    "broken_large": 1.0,
+    "broken_small": 1.0,
+    "contamination": 0.9523809523809523
+  }
+}

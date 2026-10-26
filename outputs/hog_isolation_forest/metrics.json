@@ -1,0 +1,40 @@
+{
+  "model": "HOG + Isolation Forest with calibrated threshold",
+  "model_training_images": 167,
+  "calibration_images": 42,
+  "test_images": 83,
+  "image_size": [
+    128,
+    128
+  ],
+  "hog_feature_dimension": 1764,
+  "n_estimators": 300,
+  "contamination": "auto",
+  "threshold": -0.0356525827774722,
+  "threshold_strategy": "95th percentile of held-out normal calibration scores",
+  "image_auroc": 0.9468253968253968,
+  "average_precision": 0.9825256705316008,
+  "accuracy": 0.8795180722891566,
+  "precision": 0.9649122807017544,
+  "recall": 0.873015873015873,
+  "specificity": 0.9,
+  "f1_score": 0.9166666666666666,
+  "training_seconds": 2.1642537920051836,
+  "inference_ms_per_image": 11.990584843425243,
+  "confusion_matrix": [
+    [
+      18,
+      2
+    ],
+    [
+      8,
+      55
+    ]
+  ],
+  "per_category_accuracy": {
+    "good": 0.9,
+    "broken_large": 1.0,
+    "broken_small": 0.8181818181818182,
+    "contamination": 0.8095238095238095
+  }
+}
