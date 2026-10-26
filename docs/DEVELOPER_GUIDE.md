@@ -296,7 +296,32 @@ Use `Control + C` in the terminal running Streamlit to stop the local server.
 
 在运行 Streamlit 的终端中按 `Control + C` 可以停止本地服务。
 
-## 12. Extending the project｜扩展项目
+## 12. Automated testing and CI｜自动测试与持续集成
+
+Run the data-independent test suite from the repository root:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The tests validate:
+
+- the 1,764-dimensional HOG feature contract;
+- Good and Anomaly decisions on opposite sides of the calibrated threshold;
+- clear errors for missing image and model paths; and
+- the required metadata stored in the versioned `model.joblib` artifact.
+
+The workflow at `.github/workflows/ci.yml` runs on every push to `main` and every pull request. It installs the pinned dependencies on Python 3.14, checks Python syntax, and executes the unit tests. The workflow intentionally avoids downloading the MVTec AD dataset, so CI remains deterministic and suitable for a public repository.
+
+在仓库根目录运行以下命令即可执行不依赖原始数据集的测试：
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+测试覆盖 HOG 特征维度、校准阈值两侧的分类结果、图片和模型路径校验，以及已提交模型文件的字段约定。GitHub Actions 会在每次向 `main` 推送代码或创建 Pull Request 时，使用 Python 3.14 安装固定版本依赖、检查 Python 语法并运行测试；CI 不会下载 MVTec AD 数据集。
+
+## 13. Extending the project｜扩展项目
 
 ### Add another detector｜增加新的异常检测器
 
@@ -324,7 +349,7 @@ The current output is one label per image. Pixel-level localisation requires a s
 
 当前模型每张图片只输出一个标签。像素级定位需要单独的方法，并使用 ground-truth mask 评估；不要将当前系统描述为缺陷定位模型。
 
-## 13. Troubleshooting｜常见问题
+## 14. Troubleshooting｜常见问题
 
 ### `Dataset not found`
 
@@ -363,11 +388,12 @@ Use an appropriate PowerShell execution policy approved for the machine, or run 
 - Copy the Local URL printed in the terminal into the browser.
 - Stop an existing server with `Control + C` before starting another one.
 
-## 14. Validation checklist｜验收清单
+## 15. Validation checklist｜验收清单
 
 Before merging a change:
 
 - [ ] Run `python -m py_compile` on modified Python files.
+- [ ] Run `python -m unittest discover -s tests -v`.
 - [ ] Confirm the dataset remains untracked.
 - [ ] Run the affected training or inference command.
 - [ ] Check that scores use the documented direction: larger means more anomalous.
@@ -381,6 +407,7 @@ Before merging a change:
 提交修改前：
 
 - [ ] 对修改过的 Python 文件执行语法检查。
+- [ ] 运行 `python -m unittest discover -s tests -v`。
 - [ ] 确认数据集没有进入 Git。
 - [ ] 运行受影响的训练或推理命令。
 - [ ] 确认异常分数方向仍为“越大越异常”。
@@ -390,7 +417,7 @@ Before merging a change:
 - [ ] 修改推理或界面代码后启动 Streamlit 页面验证。
 - [ ] 当命令、目录或模型格式变化时同步更新文档。
 
-## 15. Contribution workflow｜协作流程
+## 16. Contribution workflow｜协作流程
 
 1. Pull the latest `main` branch.
 2. Make one focused change at a time.
@@ -401,7 +428,7 @@ Before merging a change:
 
 建议每次提交只包含一个明确目标。不要提交 `data/`、`.venv/`、`~$` 开头的 Office 临时文件或 `.DS_Store`。
 
-## 16. Current limitations｜当前限制
+## 17. Current limitations｜当前限制
 
 - Image-level detection only; no pixel-level localisation.
 - Grayscale HOG underrepresents colour and subtle texture changes.

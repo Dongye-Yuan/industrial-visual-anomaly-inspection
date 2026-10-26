@@ -1,6 +1,9 @@
 # Industrial Visual Anomaly Inspection｜工业视觉异常检测
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://bottle-anomaly-inspection.streamlit.app/)
+[![CI](https://github.com/Dongye-Yuan/industrial-visual-anomaly-inspection/actions/workflows/ci.yml/badge.svg)](https://github.com/Dongye-Yuan/industrial-visual-anomaly-inspection/actions/workflows/ci.yml)
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.9-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
 
 **Live demo / 在线演示:** [bottle-anomaly-inspection.streamlit.app](https://bottle-anomaly-inspection.streamlit.app/)
 
@@ -128,6 +131,16 @@ Prediction result
   Predicted label: Anomaly
 ```
 
+### Automated tests
+
+The repository includes data-independent unit tests for the HOG feature contract, calibrated-threshold decisions, missing-input validation, and the versioned model-artifact schema:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions runs the tests and Python syntax checks automatically on every push to `main` and every pull request. The workflow does not download the MVTec AD dataset.
+
 ### Web demo
 
 **Public deployment:** [Open the live bilingual demo](https://bottle-anomaly-inspection.streamlit.app/)
@@ -241,6 +254,16 @@ python src/predict_image.py path/to/image.png
 ```
 
 程序会输出异常分数、校准阈值以及最终判断结果。分数高于阈值时输出 `Anomaly`，否则输出 `Good`。
+
+### 自动测试
+
+仓库提供不依赖原始数据集的单元测试，覆盖 HOG 特征维度、校准阈值两侧的分类结果、输入文件校验以及已保存模型的字段约定：
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions 会在每次向 `main` 推送代码以及创建 Pull Request 时自动执行测试和 Python 语法检查，测试过程不下载 MVTec AD 数据集。
 
 ### 可视化网页演示
 
