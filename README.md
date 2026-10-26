@@ -1,5 +1,9 @@
 # Industrial Visual Anomaly Inspection｜工业视觉异常检测
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://bottle-anomaly-inspection.streamlit.app/)
+
+**Live demo / 在线演示:** [bottle-anomaly-inspection.streamlit.app](https://bottle-anomaly-inspection.streamlit.app/)
+
 **English** | [中文](#中文)
 
 ## English
@@ -126,7 +130,9 @@ Prediction result
 
 ### Web demo
 
-Launch the bilingual Streamlit interface:
+**Public deployment:** [Open the live bilingual demo](https://bottle-anomaly-inspection.streamlit.app/)
+
+Launch the bilingual Streamlit interface locally:
 
 ```bash
 streamlit run app/app.py
@@ -238,7 +244,9 @@ python src/predict_image.py path/to/image.png
 
 ### 可视化网页演示
 
-启动中英双语 Streamlit 界面：
+**公开在线演示：**[点击打开中英双语 Streamlit 应用](https://bottle-anomaly-inspection.streamlit.app/)
+
+在本地启动中英双语 Streamlit 界面：
 
 ```bash
 streamlit run app/app.py

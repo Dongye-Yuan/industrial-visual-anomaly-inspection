@@ -264,6 +264,24 @@ Expected results with the current artifact:
 
 ## 11. Web demo｜网页演示
 
+The public application is available at:
+
+- **Live URL:** [https://bottle-anomaly-inspection.streamlit.app/](https://bottle-anomaly-inspection.streamlit.app/)
+- **Source branch:** `main`
+- **Entrypoint:** `app/app.py`
+- **Cloud runtime:** Python 3.14
+
+The deployment reads the public GitHub repository directly. A push to `main` triggers Streamlit Community Cloud to rebuild the application. No secrets or private-repository access are required.
+
+公开应用地址如下：
+
+- **在线地址：**[https://bottle-anomaly-inspection.streamlit.app/](https://bottle-anomaly-inspection.streamlit.app/)
+- **代码分支：**`main`
+- **入口文件：**`app/app.py`
+- **云端运行环境：**Python 3.14
+
+部署直接读取公开 GitHub 仓库。向 `main` 分支推送更新后，Streamlit Community Cloud 会重新构建应用；本项目不需要配置密钥，也不需要授予私有仓库访问权限。
+
 Start the local bilingual interface from the repository root:
 
 ```bash
